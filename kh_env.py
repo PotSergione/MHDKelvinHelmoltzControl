@@ -45,7 +45,7 @@ class KHEnv(gym.Env):
         
         self._printer_problem_started()
         # necessary to update the parameters
-        self.eps = np.random.uniform(0.001, 0.1)#np.random.uniform(.1, .5)
+        self.eps = np.random.uniform(0.1, 0.3)#np.random.uniform(.1, .5)
         self.phase = np.random.uniform(np.pi/2, np.pi* 3/2)
         self.update_parameter(self.data_folder + "BOUT.inp", "epsilon", self.eps)
         self.update_parameter(self.data_folder + "BOUT.inp", "phase", self.phase)
@@ -210,7 +210,7 @@ class KHEnv(gym.Env):
         self.vx_energy.append(self._compute_vx_energy())
         obs = self._extract_observation()
 
-        val = 1e7#0.02 #when 0.3 on omega
+        val = 0.02 #when 0.3 on omega
         
         if np.mean(np.abs(self.vx[self.index])) >= val or self.nan == True:
             self.terminated = True
