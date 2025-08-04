@@ -4,8 +4,6 @@ Below an image of the working controller:
 
 ![Demo](figures/mhd_controlled_0.001.gif)
 
-The uncontrolled scenario:
-
 ![Demo](figures/mhd_uncontrolled_0.001.gif)
 
 
