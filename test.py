@@ -11,7 +11,7 @@ if __name__ == '__main__':
     
     env = KHEnv()
     model_dir = "model_folder"
-    model_name = "MLP paper_vor_06.zip"
+    model_name = "MLP paper_J_02.zip"
     model_name = os.path.join(model_dir, model_name)
     model = RecurrentPPO.load(model_name, env=env, print_system_info=True)
 

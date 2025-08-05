@@ -263,7 +263,7 @@ protected:
     mesh->communicate(omega, phi, Apar, psi_ext, J);
 
     GlobalField3D g3d(mesh);
-    g3d.gather(omega);
+    g3d.gather(J);
 
     GlobalField3D vyfield(mesh);
     vyfield.gather(DDZ(phi));
