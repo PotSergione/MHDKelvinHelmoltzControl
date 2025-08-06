@@ -116,10 +116,11 @@ private:
   BoutReal resistivity;
   BoutReal density;
   BoutReal mu0;
+  BoutReal control=0.0;
 
   // control variables
   BoutReal intensity = 0.0;
-  BoutReal next_intensity;
+  BoutReal next_intensity=0.0;
   BoutReal m = 0.0;
   BoutReal q = 0.0;
 
@@ -158,7 +159,7 @@ protected:
     phi = phiSolver->solve(omega);
   
     // Output phi, omega, psi, J
-    SAVE_REPEAT(phi, omega, Apar, J, intensity);
+    SAVE_REPEAT(phi, omega, Apar, J, intensity, m, q, control, next_intensity, psi_ext);
 
     return 0;
   }
@@ -184,19 +185,15 @@ protected:
     
     mesh->communicate(psi_ext);
 
-    // Poloidal flux, including external field
     // piecewise linear with control fed every 0.1 seconds
-    psi = Apar + (m*time + q)*psi_ext; //this implies the presence of an electric field varying in time 
+    control = m*time + q ;
+    psi = Apar + control * (-psi_ext); //this implies the presence of an electric field varying in time 
 
-    // to avoid that let us assume that the coils change instantanously so no electric field is forced
-    // BoutReal coeff = time*time*a + b*time + c;
-    //psi = Apar + next_intensity*psi_ext; // this is the poloidal flux, psi = Aphi + psi_ext
-    // psi = Apar + coeff * psi_ext; // this is the poloidal flux, psi = Aphi + psi_ext
     // notice that for controls that are piecewise linear in time we would have an additional external electric field
     // that is induced by the time varying external magnetic field. 
-    // It would look like: Eext = -dt(A) 
+    // It would look like: Eext = -dt(psi) = -dt(Apar) - m*psi_ext Apar we solve for. 
 
-    Eext = -m*psi_ext;
+    Eext = m*psi_ext;
 
     mesh->communicate(psi, Eext);
 
@@ -204,14 +201,14 @@ protected:
     ddt(omega) = - bracket(phi, omega, BRACKET_ARAKAWA) // advection
                  + viscosity * Delp2(omega)           // Viscous diffusion term]
                  - bracket(psi, J, BRACKET_ARAKAWA) // the magnetic field B is rescaled by sqrt mu0. 
-                 // thuse we are actually using a rescaled force.
+                 // thus we are actually using a rescaled force.
                  ; 
         
 
     // Apar evolution:
-    ddt(Apar) = bracket(psi, phi, BRACKET_ARAKAWA)
+    ddt(Apar)  = bracket(psi, phi, BRACKET_ARAKAWA)
                 - resistivity * J //ohmic dissipation
-                + Eext //or maybe DDT(psi_ext)
+                - Eext 
                 ;           
 
     return 0;
@@ -226,7 +223,7 @@ protected:
       MPI_Barrier(MPI_COMM_WORLD);
     #endif
 
-    // dataSaver() ust not be inside the rnak==0, otherwise cannot aggregate data
+    // dataSaver() ust not be inside the rank==0, otherwise cannot aggregate data
     // as it is not called by all ranks.
     dataSaver();
   
@@ -236,18 +233,18 @@ protected:
                   NOUT);
 
         std::cout.flush();
-
-        m = (intensity-next_intensity)/0.1; // 0.1 is the time step for the control input
+        std::cerr.flush();
+        //linear interpolation
+        m = (next_intensity-intensity)/0.1; // 0.1 is the predefeined timestep
         q = intensity - m*simtime;
   
-        intensity = next_intensity;
-
-        dataReader();
+        intensity = next_intensity; // update the intensity for the next step
     }
+
+    dataReader();
 
     #ifdef BOUT_HAS_MPI
     // Broadcast to all ranks 
-      MPI_Bcast(&next_intensity, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
       MPI_Bcast(&m, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
       MPI_Bcast(&q, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     #endif
@@ -263,7 +260,7 @@ protected:
     mesh->communicate(omega, phi, Apar, psi_ext, J);
 
     GlobalField3D g3d(mesh);
-    g3d.gather(J);
+    g3d.gather(omega);
 
     GlobalField3D vyfield(mesh);
     vyfield.gather(DDZ(phi));
@@ -295,6 +292,9 @@ protected:
       if (!(std::cin >> next_intensity)) std::cerr << "No input received. Exiting."<<std::endl<<std::flush;
       else output.write("New intensity: {}\n", next_intensity);
     }
+    #ifdef BOUT_HAS_MPI
+      MPI_Bcast(&next_intensity, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    #endif
   }
 };
 

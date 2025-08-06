@@ -11,7 +11,7 @@ if __name__ == '__main__':
     
     env = KHEnv()
     model_dir = "model_folder"
-    model_name = "MLP paper_J_02.zip"
+    model_name = "MLP paper_vor_06.zip"
     model_name = os.path.join(model_dir, model_name)
     model = RecurrentPPO.load(model_name, env=env, print_system_info=True)
 
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     while not term:
         plotter(env.matrix, fig, img, strat, x,cont)
         #print(np.mean(np.abs(env.vx[env.index])))
-        #action = np.random.uniform(0,1, size=(1,))#np.array([0.5])
+        #action = np.array([.5])#np.random.uniform(-3,3,(1,))
         cont.append(env.action)
         obs, reward, term, trun, info = env.step(action)
         action, state = model.predict(obs, state=state,  deterministic=True)

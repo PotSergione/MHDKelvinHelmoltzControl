@@ -217,8 +217,6 @@ class KHEnv(gym.Env):
             terminated = True
             truncated = True
             reward = -5.0
-        # elif np.mean(np.abs(self.vx[self.index])) >= 0.015:  # Warning zone
-        #     reward = self._compute_reward().item() - .5  
         else:
             reward = self._compute_reward().item()
 

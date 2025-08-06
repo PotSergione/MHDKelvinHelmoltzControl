@@ -21,7 +21,7 @@ def plotter(matrix, fig, ax, ax1, x, control):
     probes_x = np.linspace(42, 86, 12, endpoint=True).astype(int)#[46, 50, 54, 58, 60, 62, 64, 66, 68, 72, 76, 80]
     index = np.ix_(probes_x, probes_z)
     X, Z = np.meshgrid(probes_x, probes_z)
-    ax.scatter(X, Z, c='yellow', marker='o', s=15, label='probes')
+    #ax.scatter(X, Z, c='yellow', marker='o', s=15, label='probes')
     ax.imshow(matrix.T,  cmap='seismic', aspect='auto')
     ax.axis('off')
     ax1.set_xdata(x[:len(control)])
@@ -39,6 +39,7 @@ def stats_printer(env, start):
     print(f"    Total iterations: {env.iteration}")
     print(f"    Epsilon: {env.eps}")
     print(f"    Phase: {env.phase}")
+    print(f"    Lateral position: {env.x0}")
     print(f"    Maximum control at time: {np.argmax(env.controls)}")
     print(f"    Maximum control: {np.max(env.controls)}")
     print(f"    Total  power control: {np.sum(env.controls)}")
